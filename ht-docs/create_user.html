@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>My toy website</title>
+<meta charset="utf-8">
+<script>
+function checkForm() {
+
+  let pseudo = document.getElementById("pseudo").value.trim();
+  let password = document.getElementById("password").value.trim();
+
+  if (pseudo === "" || password === "") {
+    alert("Pseudo and password are mandatory to create your account!");
+    return false;
+  }
+
+  return true;
+}
+</script>
+</head>
+<body>
+<form action="insert_user.php" method="post" onsubmit="return checkForm();">
+  <h3>Creating new user</h3>
+
+  <label>Pseudo</label><br>
+  <input type="text" id="pseudo" name="pseudo"><br><br>
+
+  <label>Password</label><br>
+  <input type="text" id="password" name="password"><br><br>
+
+  <label>First Name</label><br>
+  <input type="text" name="firstname"><br><br>
+
+  <label>Last name</label><br>
+  <input type="text" name="lastname"><br><br>
+
+  <label>
+    <input type="checkbox" name="can_use_converter" value="1">
+    Can use the converter
+  </label><br><br>
+
+  <input type="submit" value="Create">
+</form>
+</body>
+</html>

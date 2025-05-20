@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Live Traffic Light</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+  <style>
+    body {
+      background-color: #222;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 50px;
+    }
+
+    .traffic-light {
+      width: 100px;
+      background-color: #333;
+      border-radius: 20px;
+      padding: 20px;
+      margin: 0 auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    .light {
+      width: 60px;
+      height: 60px;
+      margin: 15px auto;
+      border-radius: 50%;
+      background-color: #111;
+      opacity: 0.3;
+      transition: opacity 0.5s;
+    }
+
+    .light.red.on { background-color: red; opacity: 1; }
+    .light.yellow.on { background-color: yellow; opacity: 1; }
+    .light.green.on { background-color: limegreen; opacity: 1; }
+
+    #pirStatus {
+      margin-top: 10px;
+      color: #ffcc00;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Live Traffic Light</h1>
+  <p id="status">Waiting for status...</p>
+  <p id="pirStatus"></p>
+
+  <div class="traffic-light">
+    <div id="redLight" class="light red"></div>
+    <div id="yellowLight" class="light yellow"></div>
+    <div id="greenLight" class="light green"></div>
+  </div>
+
+  <script>
+    const broker = "927d33c6ccc54f3eba5d6fb58dfe2ba9.s1.eu.hivemq.cloud";
+    const port = 8884;
+    const statusTopic = "trafficlight/status";
+    const pirTopic = "trafficlight/pir";
+
+    let currentLightState = "";
+
+    const client = new Paho.MQTT.Client(broker, port, "/mqtt", "webClient_" + Math.random().toString(16).substr(2, 8));
+
+    client.onConnectionLost = function (responseObject) {
+      if (responseObject.errorCode !== 0) {
+        console.log("Connection lost: " + responseObject.errorMessage);
+      }
+    };
+
+    client.onMessageArrived = function (message) {
+      const topic = message.destinationName;
+      const payload = message.payloadString.toLowerCase();
+      console.log(`Message on [${topic}]:`, payload);
+
+      if (topic === statusTopic) {
+        updateLightState(payload);
+      } else if (topic === pirTopic) {
+        updatePirStatus(payload);
+      }
+    };
+
+    client.connect({
+      useSSL: true,
+      userName: "taiba",
+      password: "Ariha143",
+      onSuccess: function () {
+        console.log("Connected to MQTT broker");
+        client.subscribe(statusTopic);
+        client.subscribe(pirTopic);
+      },
+      onFailure: function (e) {
+        console.error("Connection failed:", e.errorMessage);
+      }
+    });
+
+    function updateLightState(state) {
+      currentLightState = state;
+      document.getElementById("status").textContent = "Current light: " + state.toUpperCase();
+
+      const red = document.getElementById("redLight");
+      const yellow = document.getElementById("yellowLight");
+      const green = document.getElementById("greenLight");
+
+      red.classList.remove("on");
+      yellow.classList.remove("on");
+      green.classList.remove("on");
+
+      if (state === "red") {
+        red.classList.add("on");
+      } else if (state === "yellow") {
+        yellow.classList.add("on");
+      } else if (state === "green") {
+        green.classList.add("on");
+      }
+    }
+
+    function updatePirStatus(payload) {
+  const pirElem = document.getElementById("pirStatus");
+
+  if (payload === "true") {
+    // Delay check to allow traffic light status update
+    setTimeout(() => {
+      if (currentLightState === "red") {
+       // pirElem.textContent = "🚶 PIR Motion Detected - Traffic light overridden to RED";
+      } else {
+        pirElem.textContent = "";
+      }
+    }, 500); // 500ms delay allows light status to update first
+  } else {
+    pirElem.textContent = "";
+  }
+}
+
+  </script>
+</body>
+</html>

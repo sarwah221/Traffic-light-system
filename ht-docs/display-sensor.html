@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sensor Value with XHR POST</title>
+    <style>
+        #myProgress {
+            width: 100%;
+            background-color: #ddd;
+            border-radius: 20px;
+        }
+
+        #myBar {
+            width: 0%;
+            height: 30px;
+            background-color: #4CAF50;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Sensor Value via XMLHttpRequest (POST)</h1>
+
+<div id="myProgress">
+    <div id="myBar">0%</div>
+</div>
+
+<script>
+function getData() {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onload = function () {
+        console.log("Raw response from PHP:", this.responseText); // Debugging log
+
+        try {
+            var data = JSON.parse(this.responseText); // Expecting JSON from PHP
+            if (data.value !== undefined) {
+                let value = parseFloat(data.value);
+                let percentage = Math.min(100, Math.max(0, value * 20)); // scale 0–5V to 0–100%
+                let bar = document.getElementById("myBar");
+                bar.style.width = percentage + "%";
+                bar.innerHTML = value.toFixed(2) + " V";
+            } else if (data.error) {
+                console.error("Error from server:", data.error);
+            } else {
+                console.warn("Unexpected response:", data);
+            }
+        } catch (err) {
+            console.error("Failed to parse JSON. Raw text:", this.responseText);
+        }
+    };
+
+    xhttp.open("POST", "display-sensor-value.php?get_value=true", true); // Your actual PHP script
+    xhttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhttp.send(null); // No data sent, but using POST
+}
+
+// Update every 250ms
+setInterval(getData, 250);
+getData(); // Initial call
+</script>
+
+</body>
+</html>
